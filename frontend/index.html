@@ -1,0 +1,180 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Convoy Priority Dashboard (Demo)</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 18px; background:#f7f7fb; color:#111; }
+    .container { display:flex; gap:20px; }
+    .panel { background:white; padding:12px; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.06); }
+    .form { width:320px; }
+    input, select, textarea { width:100%; padding:8px; margin:6px 0; box-sizing:border-box; }
+    table { border-collapse:collapse; width:100%; }
+    th, td { border-bottom:1px solid #eee; padding:8px; text-align:left; }
+    .score { font-weight:700; }
+    .badge { padding:4px 8px; border-radius:6px; color:white; display:inline-block; }
+    .P1 { background:#e74c3c; } .P2 { background:#f39c12; } .P3 { background:#95a5a6; }
+    pre { background:#0b1220; color:#dff; padding:10px; border-radius:6px; overflow:auto; }
+    button { padding:8px 12px; cursor:pointer; }
+  </style>
+</head>
+<body>
+  <h2>Convoy Priority Dashboard — Demo</h2>
+  <div class="container">
+    <div class="panel form">
+      <h3>Create Request</h3>
+      <label>Origin</label><input id="origin" placeholder="Base A">
+      <label>Destination</label><input id="destination" placeholder="Forward X">
+      <label>Mission Type</label>
+      <select id="mission">
+        <option>Medical</option><option>Ammo</option><option>Fuel</option><option>TroopMove</option><option selected>Routine</option>
+      </select>
+      <label>Urgency</label>
+      <select id="urgency"><option>P1</option><option selected>P2</option><option>P3</option></select>
+      <label>Risk Zone</label>
+      <select id="risk"><option>High</option><option selected>Medium</option><option>Low</option></select>
+      <label>Civil Impact</label>
+      <select id="civil"><option>High</option><option selected>Medium</option><option>Low</option></select>
+      <label>Special Flags (comma separated)</label>
+      <input id="flags" placeholder="medical,VIP,no-night">
+      <label>Requested By</label><input id="requested_by" placeholder="Unit-1">
+      <div style="margin-top:8px;">
+        <button id="createBtn">Create Request</button>
+        <button id="refreshBtn">Refresh List</button>
+      </div>
+      <hr>
+      <h4>Selected Request (priority breakdown)</h4>
+      <pre id="details">No selection</pre>
+      <div style="margin-top:8px;">
+        <button id="removeSelectedBtn" style="padding:6px 10px;">Complete Selected Request</button>
+      </div>
+    </div>
+
+    <div class="panel" style="flex:1;">
+      <h3>Requests (sorted by priority)</h3>
+      <table id="tbl">
+        <thead><tr><th>ID</th><th>From→To</th><th>Mission</th><th>Urgency</th><th>Score</th><th>Label</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <p style="margin-top:12px;color:#666">Tip: edit <code>config.json</code> to change weights live, then click <b>Refresh List</b>.</p>
+    </div>
+  </div>
+
+<script>
+const apiBase = "";
+
+async function createRequest() {
+  const payload = {
+    origin: document.getElementById("origin").value || "",
+    destination: document.getElementById("destination").value || "",
+    mission_type: document.getElementById("mission").value,
+    urgency: document.getElementById("urgency").value,
+    risk_zone: document.getElementById("risk").value,
+    civil_impact: document.getElementById("civil").value,
+    special_flags: (document.getElementById("flags").value || "").split(",").map(s=>s.trim()).filter(Boolean),
+    requested_by: document.getElementById("requested_by").value || ""
+  };
+  const resp = await fetch(apiBase + "/request", {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify(payload)
+  });
+  const data = await resp.json();
+  if (resp.status === 201) {
+    alert("Request created: " + data.request_id);
+    showDetails(data);
+    await loadRequests();
+  } else {
+    alert("Error: " + (data.error || JSON.stringify(data)));
+  }
+}
+
+let lastShownRequestId = null;
+
+function showDetails(obj) {
+  lastShownRequestId = obj && obj.request_id ? obj.request_id : null;
+  if (!obj || !obj.priority) {
+    document.getElementById("details").textContent = "No details";
+    return;
+  }
+  const p = obj.priority;
+  const c = p.components;
+  document.getElementById("details").textContent =
+    `ID: ${obj.request_id || "(new)"}\nScore: ${p.score} (${p.label})\n\nComponents:\n U (urgency): ${c.U}\n M (mission): ${c.M}\n R (risk): ${c.R}\n C (civil penalty): ${c.C}\n S (special): ${c.S}\n raw: ${c.raw}`;
+}
+
+// remove selected button action
+document.getElementById("removeSelectedBtn").addEventListener("click", async () => {
+  if (!lastShownRequestId) {
+    alert("No request selected.");
+    return;
+  }
+  if (!confirm(`Remove request ${lastShownRequestId}?`)) return;
+  try {
+    const resp = await fetch(apiBase + `/request/${lastShownRequestId}`, { method: "DELETE" });
+    if (resp.ok) {
+      alert("Removed: " + lastShownRequestId);
+      await loadRequests();
+      document.getElementById("details").textContent = "No selection";
+      lastShownRequestId = null;
+    } else {
+      const body = await resp.json();
+      alert("Failed to remove: " + (body.error || JSON.stringify(body)));
+    }
+  } catch (err) {
+    alert("Error deleting request: " + err);
+  }
+});
+
+
+async function loadRequests() {
+  const resp = await fetch(apiBase + "/requests");
+  const arr = await resp.json();
+  const tbody = document.querySelector("#tbl tbody");
+  tbody.innerHTML = "";
+  arr.forEach(r => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td><a href="#" class="rid">${r.request_id}</a></td>
+                    <td>${r.origin || "-"} → ${r.destination || "-"}</td>
+                    <td>${r.mission_type}</td>
+                    <td>${r.urgency}</td>
+                    <td class="score">${r.priority ? r.priority.score : "?"}</td>
+                    <td><span class="badge ${r.priority ? r.priority.label : ''}">${r.priority ? r.priority.label : ''}</span></td>
+                    <td><button class="delBtn" style="padding:4px 8px">Complete</button></td>`;
+    // click to show details
+    tr.querySelector(".rid").addEventListener("click", (ev)=>{
+      ev.preventDefault();
+      showDetails(r);
+    });
+    // delete / complete button
+    tr.querySelector(".delBtn").addEventListener("click", async (ev) => {
+      ev.preventDefault();
+      if (!confirm(`Remove request ${r.request_id}? (This will delete the entry from store)`)) return;
+      try {
+        const resp = await fetch(apiBase + `/request/${r.request_id}`, { method: "DELETE" });
+        if (resp.ok) {
+          alert("Removed: " + r.request_id);
+          await loadRequests();
+          // clear details if the removed request was being shown
+          const details = document.getElementById("details").textContent;
+          if (details.includes(r.request_id)) document.getElementById("details").textContent = "No selection";
+        } else {
+          const body = await resp.json();
+          alert("Failed to remove: " + (body.error || JSON.stringify(body)));
+        }
+      } catch (err) {
+        alert("Error deleting request: " + err);
+      }
+    });
+    tbody.appendChild(tr);
+  });
+}
+
+document.getElementById("createBtn").addEventListener("click", createRequest);
+document.getElementById("refreshBtn").addEventListener("click", loadRequests);
+
+// load on open
+loadRequests();
+</script>
+</body>
+</html>

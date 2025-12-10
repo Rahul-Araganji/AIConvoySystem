@@ -1,0 +1,14 @@
+{
+  "URGENCY_MAP": {"P1": 100, "P2": 70, "P3": 40},
+  "MISSION_MAP": {
+    "Medical": 40,
+    "Ammo": 35,
+    "Fuel": 30,
+    "TroopMove": 25,
+    "Routine": 10
+  },
+  "RISK_MAP": {"High": 30, "Medium": 20, "Low": 10},
+  "CIVIL_MAP": {"High": 30, "Medium": 20, "Low": 10},
+  "SPECIAL_MAP": {"medical": 30, "VIP": 20, "training": -10, "no-night": 0},
+  "WEIGHTS": {"wU": 0.5, "wM": 0.2, "wR": 0.2, "wC": 0.1}
+}
