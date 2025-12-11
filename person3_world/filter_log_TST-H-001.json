@@ -1,0 +1,166 @@
+{
+  "convoy_id": "TST-H-001",
+  "allowed_count": 5,
+  "excluded_count": 8,
+  "excluded_segments": [
+    {
+      "segment_id": "B-C",
+      "from_node": "B",
+      "to_node": "C",
+      "distance_km": 18.0,
+      "base_time_min": 22,
+      "traffic_level": 2,
+      "risk_level": 0.45,
+      "max_load_tons": 25,
+      "max_width_m": 3.5,
+      "max_height_m": 3.2,
+      "allowed_convoy_classes": [
+        "Light",
+        "Medium"
+      ],
+      "is_blocked": false,
+      "civil_impact": "High",
+      "weather_sensitivity": 0.5,
+      "_rejection_reason": "convoy_class_not_allowed"
+    },
+    {
+      "segment_id": "C-D",
+      "from_node": "C",
+      "to_node": "D",
+      "distance_km": 24.0,
+      "base_time_min": 30,
+      "traffic_level": 1,
+      "risk_level": 0.6,
+      "max_load_tons": 30,
+      "max_width_m": 4.0,
+      "max_height_m": 3.5,
+      "allowed_convoy_classes": [
+        "Light",
+        "Medium"
+      ],
+      "is_blocked": false,
+      "civil_impact": "Medium",
+      "weather_sensitivity": 0.7,
+      "_rejection_reason": "convoy_class_not_allowed"
+    },
+    {
+      "segment_id": "B-F",
+      "from_node": "B",
+      "to_node": "F",
+      "distance_km": 16.0,
+      "base_time_min": 18,
+      "traffic_level": 1,
+      "risk_level": 0.25,
+      "max_load_tons": 35,
+      "max_width_m": 4.0,
+      "max_height_m": 3.8,
+      "allowed_convoy_classes": [
+        "Light",
+        "Medium"
+      ],
+      "is_blocked": false,
+      "civil_impact": "Medium",
+      "weather_sensitivity": 0.3,
+      "_rejection_reason": "convoy_class_not_allowed"
+    },
+    {
+      "segment_id": "F-G",
+      "from_node": "F",
+      "to_node": "G",
+      "distance_km": 8.0,
+      "base_time_min": 10,
+      "traffic_level": 2,
+      "risk_level": 0.35,
+      "max_load_tons": 20,
+      "max_width_m": 3.2,
+      "max_height_m": 3.0,
+      "allowed_convoy_classes": [
+        "Light"
+      ],
+      "is_blocked": false,
+      "civil_impact": "High",
+      "weather_sensitivity": 0.4,
+      "_rejection_reason": "load_capacity_exceeded"
+    },
+    {
+      "segment_id": "G-D",
+      "from_node": "G",
+      "to_node": "D",
+      "distance_km": 20.0,
+      "base_time_min": 24,
+      "traffic_level": 1,
+      "risk_level": 0.55,
+      "max_load_tons": 28,
+      "max_width_m": 3.8,
+      "max_height_m": 3.6,
+      "allowed_convoy_classes": [
+        "Light",
+        "Medium"
+      ],
+      "is_blocked": false,
+      "civil_impact": "Medium",
+      "weather_sensitivity": 0.6,
+      "_rejection_reason": "convoy_class_not_allowed"
+    },
+    {
+      "segment_id": "C-F",
+      "from_node": "C",
+      "to_node": "F",
+      "distance_km": 14.0,
+      "base_time_min": 17,
+      "traffic_level": 1,
+      "risk_level": 0.4,
+      "max_load_tons": 30,
+      "max_width_m": 4.0,
+      "max_height_m": 3.8,
+      "allowed_convoy_classes": [
+        "Light",
+        "Medium"
+      ],
+      "is_blocked": false,
+      "civil_impact": "Medium",
+      "weather_sensitivity": 0.35,
+      "_rejection_reason": "convoy_class_not_allowed"
+    },
+    {
+      "segment_id": "H-D",
+      "from_node": "H",
+      "to_node": "D",
+      "distance_km": 12.0,
+      "base_time_min": 15,
+      "traffic_level": 1,
+      "risk_level": 0.2,
+      "max_load_tons": 30,
+      "max_width_m": 3.9,
+      "max_height_m": 3.5,
+      "allowed_convoy_classes": [
+        "Light",
+        "Medium"
+      ],
+      "is_blocked": false,
+      "civil_impact": "Low",
+      "weather_sensitivity": 0.25,
+      "_rejection_reason": "convoy_class_not_allowed"
+    },
+    {
+      "segment_id": "B-G",
+      "from_node": "B",
+      "to_node": "G",
+      "distance_km": 28.0,
+      "base_time_min": 34,
+      "traffic_level": 2,
+      "risk_level": 0.5,
+      "max_load_tons": 22,
+      "max_width_m": 3.2,
+      "max_height_m": 3.0,
+      "allowed_convoy_classes": [
+        "Light",
+        "Medium"
+      ],
+      "is_blocked": false,
+      "civil_impact": "High",
+      "weather_sensitivity": 0.6,
+      "_rejection_reason": "height_clearance"
+    }
+  ]
+}

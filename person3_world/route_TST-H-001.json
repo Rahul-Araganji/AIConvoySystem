@@ -1,0 +1,43 @@
+{
+  "success": true,
+  "convoy_id": "TST-H-001",
+  "origin": "B",
+  "destination": "E",
+  "route_nodes": [
+    "B",
+    "A",
+    "E"
+  ],
+  "route_segments": [
+    {
+      "segment_id": "A-B_rev",
+      "from": "B",
+      "to": "A",
+      "base_time_min": 15.0,
+      "computed_cost": 17.56,
+      "risk_level": 0.15
+    },
+    {
+      "segment_id": "A-E",
+      "from": "A",
+      "to": "E",
+      "base_time_min": 40.0,
+      "computed_cost": 36.56,
+      "risk_level": 0.1
+    }
+  ],
+  "eta_minutes": 54.12,
+  "total_risk": 0.25,
+  "cost_breakdown": [
+    {
+      "segment": "A-B_rev",
+      "cost": 17.56,
+      "risk": 0.15
+    },
+    {
+      "segment": "A-E",
+      "cost": 36.56,
+      "risk": 0.1
+    }
+  ]
+}

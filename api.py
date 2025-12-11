@@ -3,12 +3,25 @@ from flask import Flask, request, jsonify
 import json
 import traceback
 from pathlib import Path
+from flask_cors import CORS
 
 # local imports (these exist in repo)
 from filter_graph import load_graph
 from plan_route import plan_for_convoy
 
+from flask import send_from_directory
+import os
+
+
+
 app = Flask(__name__)
+
+# serve the frontend index at root
+@app.route("/", methods=["GET"])
+def serve_index():
+    # if file exists under ./frontend/index.html
+    frontend_dir = os.path.join(os.path.dirname(__file__), "frontend")
+    return send_from_directory(frontend_dir, "index.html")
 
 @app.route("/plan_route", methods=["POST"])
 def plan_route_endpoint():
