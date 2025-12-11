@@ -44,7 +44,9 @@
       </div>
       <hr>
       <h4>Selected Request (priority breakdown)</h4>
+      
       <pre id="details">No selection</pre>
+      
       <div style="margin-top:8px;">
         <button id="removeSelectedBtn" style="padding:6px 10px;">Complete Selected Request</button>
       </div>
@@ -59,6 +61,32 @@
       <p style="margin-top:12px;color:#666">Tip: edit <code>config.json</code> to change weights live, then click <b>Refresh List</b>.</p>
     </div>
   </div>
+
+<hr>
+<h4>Priority Weights (live tuning)</h4>
+<div id="weightsPanel">
+  <label>Urgency weight (wU): <span id="wUval">0.5</span></label>
+  <input type="range" id="wU" min="0" max="1" step="0.05" value="0.5">
+
+  <label>Mission weight (wM): <span id="wMval">0.2</span></label>
+  <input type="range" id="wM" min="0" max="1" step="0.05" value="0.2">
+
+  <label>Risk weight (wR): <span id="wRval">0.2</span></label>
+  <input type="range" id="wR" min="0" max="1" step="0.05" value="0.2">
+
+  <label>Civil penalty weight (wC): <span id="wCval">0.1</span></label>
+  <input type="range" id="wC" min="0" max="1" step="0.05" value="0.1">
+
+  <div style="margin-top:8px;">
+    <button id="saveWeightsBtn">Save Weights</button>
+    <button id="resetWeightsBtn">Reset to Defaults</button>
+  </div>
+
+  <p style="font-size:12px;color:#666">
+    Saving updates <code>config.json</code> and immediately affects priority calculation.
+  </p>
+</div>
+
 
 <script>
 const apiBase = "";
@@ -169,6 +197,97 @@ async function loadRequests() {
     tbody.appendChild(tr);
   });
 }
+
+// --- weights tuning code ---
+async function loadWeightsToUI() {
+  try {
+    const resp = await fetch("/config");
+    const cfg = await resp.json();
+    const w = (cfg && cfg.WEIGHTS) ? cfg.WEIGHTS : { wU:0.5, wM:0.2, wR:0.2, wC:0.1 };
+    // set slider values and labels
+    document.getElementById("wU").value = w.wU;
+    document.getElementById("wM").value = w.wM;
+    document.getElementById("wR").value = w.wR;
+    document.getElementById("wC").value = w.wC;
+    document.getElementById("wUval").textContent = w.wU;
+    document.getElementById("wMval").textContent = w.wM;
+    document.getElementById("wRval").textContent = w.wR;
+    document.getElementById("wCval").textContent = w.wC;
+  } catch (err) {
+    console.error("Failed to load config:", err);
+  }
+}
+
+function wireWeightSliders() {
+  ["wU","wM","wR","wC"].forEach(id => {
+    const el = document.getElementById(id);
+    const lab = document.getElementById(id + "val");
+    el.addEventListener("input", ()=> {
+      lab.textContent = el.value;
+    });
+  });
+}
+
+document.getElementById("saveWeightsBtn").addEventListener("click", async ()=>{
+  const payload = await (async ()=>{
+    // fetch full config first to preserve maps
+    const resp = await fetch("/config"); const cfg = await resp.json();
+    return cfg;
+  })();
+
+  payload.WEIGHTS = {
+    wU: parseFloat(document.getElementById("wU").value),
+    wM: parseFloat(document.getElementById("wM").value),
+    wR: parseFloat(document.getElementById("wR").value),
+    wC: parseFloat(document.getElementById("wC").value)
+  };
+
+  try {
+    const resp = await fetch("/config", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify(payload)
+    });
+    const body = await resp.json();
+    if (resp.ok) {
+      alert("Weights saved.");
+      // refresh list (recompute priorities)
+      await loadRequests();
+    } else {
+      alert("Failed to save: " + (body.error || JSON.stringify(body)));
+    }
+  } catch (err) {
+    alert("Error saving weights: " + err);
+  }
+});
+
+document.getElementById("resetWeightsBtn").addEventListener("click", async ()=>{
+  if (!confirm("Reset weights to default values?")) return;
+  // reset sliders to defaults and save
+  document.getElementById("wU").value = 0.5; document.getElementById("wUval").textContent = 0.5;
+  document.getElementById("wM").value = 0.2; document.getElementById("wMval").textContent = 0.2;
+  document.getElementById("wR").value = 0.2; document.getElementById("wRval").textContent = 0.2;
+  document.getElementById("wC").value = 0.1; document.getElementById("wCval").textContent = 0.1;
+  // construct payload (preserve maps)
+  const resp = await fetch("/config"); const cfg = await resp.json();
+  cfg.WEIGHTS = { wU:0.5, wM:0.2, wR:0.2, wC:0.1 };
+  const save = await fetch("/config", {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify(cfg)
+  });
+  if (save.ok) {
+    alert("Reset to defaults.");
+    await loadRequests();
+  } else {
+    alert("Failed to reset weights.");
+  }
+});
+
+// call on load
+wireWeightSliders();
+loadWeightsToUI();
+
 
 document.getElementById("createBtn").addEventListener("click", createRequest);
 document.getElementById("refreshBtn").addEventListener("click", loadRequests);

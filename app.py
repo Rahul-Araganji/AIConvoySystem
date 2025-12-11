@@ -119,6 +119,73 @@ def delete_request(request_id):
     save_store(new_store)
     return jsonify({"deleted": request_id}), 200
 
+# --- config endpoints (add to app.py) ---
+from flask import abort
+
+CONFIG_PATH = "config.json"
+DEFAULT_CONFIG = {
+    "URGENCY_MAP": {"P1": 100, "P2": 70, "P3": 40},
+    "MISSION_MAP": {
+        "Medical": 40, "Ammo": 35, "Fuel": 30, "TroopMove": 25, "Routine": 10
+    },
+    "RISK_MAP": {"High": 30, "Medium": 20, "Low": 10},
+    "CIVIL_MAP": {"High": 30, "Medium": 20, "Low": 10},
+    "SPECIAL_MAP": {"medical": 30, "VIP": 20, "training": -10, "no-night": 0},
+    "WEIGHTS": {"wU": 0.5, "wM": 0.2, "wR": 0.2, "wC": 0.1}
+}
+
+def read_config_file():
+    if not os.path.exists(CONFIG_PATH):
+        # create default
+        with open(CONFIG_PATH, "w", encoding="utf-8") as f:
+            json.dump(DEFAULT_CONFIG, f, indent=2)
+        return DEFAULT_CONFIG
+    try:
+        with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        # if malformed, return default (do not overwrite)
+        return DEFAULT_CONFIG
+
+@app.route("/config", methods=["GET"])
+def get_config():
+    cfg = read_config_file()
+    # only return WEIGHTS and maybe mapping summaries for UI
+    return jsonify(cfg)
+
+@app.route("/config", methods=["POST"])
+def post_config():
+    """
+    Accepts JSON payload to update config.json. Minimal validation applied.
+    Expected payload shape: same as config.json (WEIGHTS key required).
+    """
+    payload = request.get_json(force=True)
+    if not payload:
+        return jsonify({"error": "JSON payload required"}), 400
+
+    # Basic validation: WEIGHTS must exist and be dict with numeric values
+    weights = payload.get("WEIGHTS")
+    if not isinstance(weights, dict):
+        return jsonify({"error": "WEIGHTS must be a dict"}), 400
+    for k in ("wU", "wM", "wR", "wC"):
+        if k not in weights:
+            return jsonify({"error": f"Missing weight {k}"}), 400
+        try:
+            val = float(weights[k])
+        except Exception:
+            return jsonify({"error": f"Weight {k} must be numeric"}), 400
+
+    # Optionally validate mapping values are numeric (skip deep validation for hackathon)
+    # Write payload to file (overwrite)
+    try:
+        with open(CONFIG_PATH, "w", encoding="utf-8") as f:
+            json.dump(payload, f, indent=2)
+    except Exception as e:
+        return jsonify({"error": f"Failed to write config: {e}"}), 500
+
+    return jsonify({"status": "saved", "WEIGHTS": payload.get("WEIGHTS")}), 200
+
+
 if __name__ == "__main__":
     if not os.path.exists(STORE_FILE):
         save_store([])
